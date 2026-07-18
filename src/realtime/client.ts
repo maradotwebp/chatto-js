@@ -14,16 +14,7 @@ import type {
   RealtimeEventType,
 } from "./events.js";
 
-/**
- * Observable lifecycle state of a {@link RealtimeClient}.
- *
- * @example
- * ```ts
- * if (realtime.state === "closed") {
- *   await realtime.connect();
- * }
- * ```
- */
+/** Observable lifecycle state of a {@link RealtimeClient}. */
 export type RealtimeClientState = "idle" | "connecting" | "open" | "closed";
 
 /**
@@ -32,11 +23,6 @@ export type RealtimeClientState = "idle" | "connecting" | "open" | "closed";
  * The standard browser, Bun, and Node.js 22 WebSocket implementations satisfy
  * this shape. Custom implementations must deliver binary messages through
  * `MessageEvent.data` and support `binaryType = "arraybuffer"`.
- *
- * @example
- * ```ts
- * const socket: WebSocketLike = new WebSocket("wss://chat.example.com/api/realtime");
- * ```
  */
 export interface WebSocketLike {
   /** Preferred representation for incoming binary frames. */
@@ -57,29 +43,10 @@ export interface WebSocketLike {
 
 /**
  * Creates the WebSocket instance used for one realtime connection attempt.
- *
- * @param url - Fully normalized `ws:` or `wss:` Chatto realtime URL.
- * @returns A WebSocket-compatible object.
- *
- * @example
- * ```ts
- * const webSocketFactory: WebSocketFactory = (url) => new WebSocket(url);
- * ```
  */
 export type WebSocketFactory = (url: string) => WebSocketLike;
 
-/**
- * Configures a {@link RealtimeClient} connection and its runtime dependencies.
- *
- * @example
- * ```ts
- * const options: RealtimeClientOptions = {
- *   baseUrl: "https://chat.example.com",
- *   token: () => tokenStore.current(),
- *   webSocketFactory: (url) => new WebSocket(url),
- * };
- * ```
- */
+/** Configures a {@link RealtimeClient} connection and its runtime dependencies. */
 export interface RealtimeClientOptions {
   /** Chatto server origin, optionally ending in `/api/connect`. */
   readonly baseUrl: string;
