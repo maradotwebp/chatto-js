@@ -1,5 +1,6 @@
-import { createClient, type Client, type Transport } from "@connectrpc/connect";
+import { createClient, type Client, type Interceptor, type Transport } from "@connectrpc/connect";
 import type { DescService } from "@bufbuild/protobuf";
+import type { TokenProvider } from "./auth.js";
 import { AdminDiagnosticsService } from "./gen/chatto/admin/v1/diagnostics_pb.js";
 import { AdminEventLogService } from "./gen/chatto/admin/v1/event_log_pb.js";
 import { AdminUserService } from "./gen/chatto/admin/v1/members_pb.js";
@@ -25,7 +26,48 @@ import { VoiceCallService } from "./gen/chatto/api/v1/voice_calls_pb.js";
 import { ExternalIdentityAuthService } from "./gen/chatto/auth/v1/external_identity_auth_pb.js";
 import { ServerDiscoveryService } from "./gen/chatto/discovery/v1/server_pb.js";
 import { RealtimeClient, type RealtimeClientOptions } from "./realtime/client.js";
-import { createChattoTransport, type ChattoTransportOptions } from "./transport.js";
+import { createChattoTransport } from "./transport.js";
+
+/** Configures a {@link ChattoClient}. */
+export interface ChattoClientOptions {
+  /**
+   * Chatto server origin, optionally ending in `/api/connect`.
+   *
+   * Credentials, query strings, fragments, and unrelated paths are rejected.
+   */
+  readonly baseUrl: string;
+
+  /**
+   * Opaque bearer token or per-request token provider.
+   *
+   * Omit this property to authenticate with the browser's Chatto session cookie.
+   */
+  readonly token?: TokenProvider | undefined;
+
+  /**
+   * Fetch implementation used for RPC requests.
+   *
+   * @defaultValue `globalThis.fetch`
+   */
+  readonly fetch?: typeof globalThis.fetch | undefined;
+
+  /**
+   * Whether Connect should encode request and response bodies as binary protobuf.
+   *
+   * @defaultValue `false`, which uses Connect's JSON encoding.
+   */
+  readonly useBinaryFormat?: boolean | undefined;
+
+  /**
+   * Fetch credentials mode applied to every RPC.
+   *
+   * @defaultValue `"include"`
+   */
+  readonly credentials?: RequestCredentials | undefined;
+
+  /** Additional Connect interceptors applied before requests are sent. */
+  readonly interceptors?: Interceptor[] | undefined;
+}
 
 type ServiceClientFactory = <S extends DescService>(service: S) => Client<S>;
 
@@ -83,7 +125,7 @@ export class ChattoClient {
   readonly #clients = new Map<DescService, Client<DescService>>();
 
   /** Options used to configure RPC and realtime clients. */
-  readonly options: ChattoTransportOptions;
+  readonly options: ChattoClientOptions;
 
   /** Lazy namespace containing every administrative service client. */
   readonly admin: ChattoAdminClient;
@@ -102,7 +144,7 @@ export class ChattoClient {
    * const server = await chatto.discovery.getServer({});
    * ```
    */
-  constructor(options: ChattoTransportOptions) {
+  constructor(options: ChattoClientOptions) {
     this.options = options;
     this.#transport = createChattoTransport(options);
     this.admin = new ChattoAdminClient(<S extends DescService>(service: S) => this.#client(service));

@@ -22,7 +22,7 @@
  */
 export { Code, ConnectError } from "@connectrpc/connect";
 export { createAuthInterceptor, type TokenProvider } from "./auth.js";
-export { ChattoAdminClient, ChattoClient } from "./client.js";
+export { ChattoAdminClient, ChattoClient, type ChattoClientOptions } from "./client.js";
 export {
   RealtimeClient,
   type RealtimeClientOptions,
@@ -44,10 +44,4 @@ export type {
   RealtimeEventValue,
   RealtimeOpenEvent,
 } from "./realtime/events.js";
-export {
-  createChattoTransport,
-  normalizeChattoBaseUrl,
-  normalizeConnectBaseUrl,
-  type ChattoTransportOptions,
-} from "./transport.js";
 export { CHATTO_PROTOCOL_TAG, VERSION } from "./version.js";
