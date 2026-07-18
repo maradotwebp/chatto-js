@@ -1,0 +1,12 @@
+chatto.js
+Copyright 2026 chatto.js contributors
+
+This product includes public protocol/API definitions from Chatto v0.4.13.
+Copyright 2026 ChattoCorp GmbH.
+Licensed under the Apache License, Version 2.0.
+Source: https://github.com/chattocorp/chatto/tree/v0.4.13/proto
+
+This product's generated sources include protocol descriptors from Protovalidate.
+Copyright 2023 Buf Technologies, Inc.
+Licensed under the Apache License, Version 2.0.
+Source: https://github.com/bufbuild/protovalidate
