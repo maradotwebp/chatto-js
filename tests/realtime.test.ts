@@ -1,9 +1,6 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, jest, test } from "bun:test";
 import { ChattoClient } from "../src/client.js";
-import {
-  RealtimeClient,
-  type RealtimeTimers,
-} from "../src/realtime/client.js";
+import { RealtimeClient } from "../src/realtime/client.js";
 import { startMockRealtimeServer, type MockRealtimeServer } from "./mock/realtime-server.js";
 
 let server: MockRealtimeServer | undefined;
@@ -21,43 +18,6 @@ function eventPromise<K extends Parameters<RealtimeClient["addEventListener"]>[0
   type: K,
 ): Promise<unknown> {
   return new Promise((resolve) => target.addEventListener(type, resolve as never, { once: true }));
-}
-
-async function waitFor(predicate: () => boolean, timeoutMs = 1_000): Promise<void> {
-  const started = performance.now();
-  while (!predicate()) {
-    if (performance.now() - started > timeoutMs) throw new Error("Timed out waiting for condition");
-    await Bun.sleep(5);
-  }
-}
-
-class ManualTimers implements RealtimeTimers {
-  nowMs = 0;
-  nextId = 1;
-  tasks = new Map<number, { due: number; callback: () => void }>();
-
-  now = (): number => this.nowMs;
-  setTimeout = (callback: () => void, delayMs: number): number => {
-    const id = this.nextId++;
-    this.tasks.set(id, { due: this.nowMs + delayMs, callback });
-    return id;
-  };
-  clearTimeout = (id: unknown): void => {
-    this.tasks.delete(id as number);
-  };
-  advance(delayMs: number): void {
-    const target = this.nowMs + delayMs;
-    while (true) {
-      const due = [...this.tasks.entries()]
-        .filter(([, task]) => task.due <= target)
-        .sort((a, b) => a[1].due - b[1].due)[0];
-      if (!due) break;
-      this.nowMs = due[1].due;
-      this.tasks.delete(due[0]);
-      due[1].callback();
-    }
-    this.nowMs = target;
-  }
 }
 
 describe("RealtimeClient", () => {
@@ -111,19 +71,43 @@ describe("RealtimeClient", () => {
   });
 
   test("pings after two missed heartbeat intervals and closes after continued silence", async () => {
-    const timers = new ManualTimers();
     server = startMockRealtimeServer({ heartbeatIntervalSeconds: 1, respondToPing: false });
-    client = new RealtimeClient({ baseUrl: server.baseUrl, timers });
+    client = new RealtimeClient({ baseUrl: server.baseUrl });
     await client.connect();
-    const closed = eventPromise(client, "close");
 
-    timers.advance(2_000);
-    await waitFor(() => (server?.pings.length ?? 0) === 1);
-    timers.advance(1_000);
-    const closeEvent = await closed as { detail: { code: string } };
+    jest.useFakeTimers({ now: 0 });
+    try {
+      const activity = eventPromise(client, "messagePosted");
+      server.send({
+        frame: {
+          case: "event",
+          value: {
+            id: "heartbeat-activity",
+            event: {
+              case: "messagePosted",
+              value: { roomId: "room-1", messageEventId: "event-1" },
+            },
+          },
+        },
+      });
+      await activity;
+      const closed = eventPromise(client, "close");
+      const send = jest.spyOn(WebSocket.prototype, "send");
 
-    expect(closeEvent.detail.code).toBe("heartbeat_timeout");
-    expect(client.state).toBe("closed");
+      try {
+        jest.advanceTimersByTime(2_000);
+        expect(send).toHaveBeenCalledTimes(1);
+        jest.advanceTimersByTime(1_000);
+        const closeEvent = await closed as { detail: { code: string } };
+
+        expect(closeEvent.detail.code).toBe("heartbeat_timeout");
+        expect(client.state).toBe("closed");
+      } finally {
+        send.mockRestore();
+      }
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test("exposes server close hints and allows a manual reconnect", async () => {

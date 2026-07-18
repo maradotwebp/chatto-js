@@ -92,7 +92,7 @@ The client watches the negotiated heartbeat interval. After two silent intervals
 
 The stream is live-only. After a disconnect, application code should choose when to call `connect()` again and then rehydrate durable state through ConnectRPC. Call `close()` for a clean shutdown.
 
-Custom implementations can be injected without adding retry behavior:
+Custom transports can be injected without adding retry behavior:
 
 ```ts
 const chatto = new ChattoClient({
@@ -102,7 +102,6 @@ const chatto = new ChattoClient({
 
 const realtime = chatto.realtime({
   webSocketFactory: (url) => new CustomWebSocket(url),
-  timers: customTimers,
 });
 ```
 

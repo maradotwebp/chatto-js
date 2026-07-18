@@ -27,32 +27,6 @@ import type {
 export type RealtimeClientState = "idle" | "connecting" | "open" | "closed";
 
 /**
- * Timer abstraction used by the realtime heartbeat watchdog.
- *
- * Supply a deterministic implementation in tests or a runtime-specific
- * scheduler in environments without the standard global timers.
- *
- * @example
- * ```ts
- * const timers: RealtimeTimers = {
- *   now: () => Date.now(),
- *   setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
- *   clearTimeout: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
- * };
- * ```
- */
-export interface RealtimeTimers {
-  /** Returns the current monotonic or wall-clock time in milliseconds. */
-  now(): number;
-
-  /** Schedules a callback and returns an implementation-defined handle. */
-  setTimeout(callback: () => void, delayMs: number): unknown;
-
-  /** Cancels a handle previously returned by {@link RealtimeTimers.setTimeout}. */
-  clearTimeout(handle: unknown): void;
-}
-
-/**
  * Minimal WebSocket contract required by {@link RealtimeClient}.
  *
  * The standard browser, Bun, and Node.js 22 WebSocket implementations satisfy
@@ -116,28 +90,15 @@ export interface RealtimeClientOptions {
   /**
    * WebSocket constructor override.
    *
-   * @defaultValue The global `WebSocket` constructor.
-   */
+  * @defaultValue The global `WebSocket` constructor.
+  */
   readonly webSocketFactory?: WebSocketFactory | undefined;
-
-  /**
-   * Heartbeat timer override.
-   *
-   * @defaultValue Standard global timers and `Date.now()`.
-   */
-  readonly timers?: RealtimeTimers | undefined;
 }
 
 interface StoredListener {
   readonly callback: (event: RealtimeEventMap[RealtimeEventType]) => void;
   readonly once: boolean;
 }
-
-const defaultTimers: RealtimeTimers = {
-  now: () => Date.now(),
-  setTimeout: (callback, delayMs) => globalThis.setTimeout(callback, delayMs),
-  clearTimeout: (handle) => globalThis.clearTimeout(handle as ReturnType<typeof setTimeout>),
-};
 
 /**
  * Maintains Chatto's live-only binary-protobuf realtime subscription.
@@ -169,14 +130,13 @@ const defaultTimers: RealtimeTimers = {
  */
 export class RealtimeClient {
   readonly #options: RealtimeClientOptions;
-  readonly #timers: RealtimeTimers;
   readonly #listeners = new Map<RealtimeEventType, Set<StoredListener>>();
   #socket: WebSocketLike | undefined;
   #state: RealtimeClientState = "idle";
   #connectPromise: Promise<void> | undefined;
   #resolveConnect: (() => void) | undefined;
   #rejectConnect: ((reason: unknown) => void) | undefined;
-  #watchdog: unknown;
+  #watchdog: ReturnType<typeof globalThis.setTimeout> | undefined;
   #lastActivity = 0;
   #heartbeatIntervalMs = 0;
   #pingOutstanding = false;
@@ -192,7 +152,6 @@ export class RealtimeClient {
    */
   constructor(options: RealtimeClientOptions) {
     this.#options = options;
-    this.#timers = options.timers ?? defaultTimers;
   }
 
   /**
@@ -460,7 +419,7 @@ export class RealtimeClient {
   }
 
   #markActivity(): void {
-    this.#lastActivity = this.#timers.now();
+    this.#lastActivity = Date.now();
     this.#pingOutstanding = false;
     this.#scheduleWatchdog(this.#heartbeatIntervalMs * 2);
   }
@@ -468,13 +427,13 @@ export class RealtimeClient {
   #scheduleWatchdog(delayMs: number): void {
     this.#clearWatchdog();
     if (this.#heartbeatIntervalMs <= 0) return;
-    this.#watchdog = this.#timers.setTimeout(() => this.#runWatchdog(), delayMs);
+    this.#watchdog = globalThis.setTimeout(() => this.#runWatchdog(), delayMs);
   }
 
   #runWatchdog(): void {
     this.#watchdog = undefined;
     if (!this.#socket || this.#state === "closed") return;
-    const quietFor = this.#timers.now() - this.#lastActivity;
+    const quietFor = Date.now() - this.#lastActivity;
     if (!this.#pingOutstanding && quietFor < this.#heartbeatIntervalMs * 2) {
       this.#scheduleWatchdog(this.#heartbeatIntervalMs * 2 - quietFor);
       return;
@@ -484,7 +443,7 @@ export class RealtimeClient {
       this.#send({
         frame: {
           case: "ping",
-          value: { nonce: `${this.#timers.now()}-${++this.#pingSequence}` },
+          value: { nonce: `${Date.now()}-${++this.#pingSequence}` },
         },
       });
       this.#scheduleWatchdog(this.#heartbeatIntervalMs);
@@ -497,7 +456,7 @@ export class RealtimeClient {
 
   #clearWatchdog(): void {
     if (this.#watchdog !== undefined) {
-      this.#timers.clearTimeout(this.#watchdog);
+      globalThis.clearTimeout(this.#watchdog);
       this.#watchdog = undefined;
     }
   }

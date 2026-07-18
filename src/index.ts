@@ -27,7 +27,6 @@ export {
   RealtimeClient,
   type RealtimeClientOptions,
   type RealtimeClientState,
-  type RealtimeTimers,
   type WebSocketFactory,
   type WebSocketLike,
 } from "./realtime/client.js";
