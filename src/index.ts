@@ -3,11 +3,11 @@
  *
  * Start with {@link ChattoClient} for shared authentication and lazy access to
  * all generated public and administrative service clients. Generated protobuf
- * schemas and message types are available through `chatto.js/gen/*` exports.
+ * schemas and message types are available through `chatto-js/gen/*` exports.
  *
  * @example
  * ```ts
- * import { ChattoClient } from "chatto.js";
+ * import { ChattoClient } from "chatto-js";
  *
  * const chatto = new ChattoClient({
  *   baseUrl: "https://chat.example.com",

@@ -78,7 +78,7 @@ interface StoredListener {
  *
  * @example
  * ```ts
- * import { RealtimeClient } from "chatto.js";
+ * import { RealtimeClient } from "chatto-js";
  *
  * const realtime = new RealtimeClient({
  *   baseUrl: "https://chat.example.com",

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "chatto.js",
+      "name": "chatto-js",
       "dependencies": {
         "@bufbuild/protobuf": "^2.10.0",
         "@connectrpc/connect": "^2.1.1",

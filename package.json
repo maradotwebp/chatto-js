@@ -1,5 +1,5 @@
 {
-  "name": "chatto.js",
+  "name": "chatto-js",
   "version": "0.4.0",
   "description": "TypeScript client for the Chatto chat server",
   "type": "module",

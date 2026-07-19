@@ -1,4 +1,4 @@
-/** Installed `chatto.js` package version. */
+/** Installed `chatto-js` package version. */
 export const VERSION = "0.1.0";
 
 /** Upstream Chatto release tag used to vendor and generate protocol definitions. */

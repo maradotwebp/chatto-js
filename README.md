@@ -1,13 +1,13 @@
-# chatto.js
+# chatto-js
 
 A thin, fully typed TypeScript client for [Chatto](https://docs.chatto.run/). It exposes Chatto's complete public and admin ConnectRPC API and its binary-protobuf realtime WebSocket protocol.
 
-The generated API is pinned to Chatto **v0.4.13**. Chatto is pre-1.0, so protocol updates in the 0.x line may require a new `chatto.js` release.
+The generated API is pinned to Chatto **v0.4.13**. Chatto is pre-1.0, so protocol updates in the 0.x line may require a new `chatto-js` release.
 
 ## Install
 
 ```sh
-bun add chatto.js
+bun add chatto-js
 ```
 
 Node.js 22 or newer, Bun, and modern browsers provide the required `fetch` and `WebSocket` globals. Both are injectable for other runtimes and tests.
@@ -15,7 +15,7 @@ Node.js 22 or newer, Bun, and modern browsers provide the required `fetch` and `
 ## Quick start
 
 ```ts
-import { ChattoClient } from "chatto.js";
+import { ChattoClient } from "chatto-js";
 
 const chatto = new ChattoClient({
   baseUrl: "https://chat.example.com",
@@ -24,7 +24,7 @@ const chatto = new ChattoClient({
 
 const created = await chatto.messages.createMessage({
   roomId: "room-id",
-  body: "Hello from chatto.js",
+  body: "Hello from chatto-js",
 });
 
 const realtime = chatto.realtime();
@@ -67,13 +67,13 @@ const users = await chatto.admin.users.listMembers({ page: { limit: 50 } });
 Generated request, response, enum, and message definitions are available through deep exports:
 
 ```ts
-import type { Message } from "chatto.js/gen/chatto/api/v1/message_types_pb";
+import type { Message } from "chatto-js/gen/chatto/api/v1/message_types_pb";
 ```
 
 Connect failures surface as standard `ConnectError` values:
 
 ```ts
-import { Code, ConnectError } from "chatto.js";
+import { Code, ConnectError } from "chatto-js";
 
 try {
   await chatto.viewer.getViewer({});
@@ -121,4 +121,4 @@ bun run build
 
 ## License
 
-`chatto.js` is Apache-2.0. See [NOTICE](NOTICE) for attribution of the vendored Chatto definitions and Protovalidate descriptors.
+`chatto-js` is Apache-2.0. See [NOTICE](NOTICE) for attribution of the vendored Chatto definitions and Protovalidate descriptors.

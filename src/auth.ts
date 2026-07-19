@@ -21,7 +21,7 @@ export type TokenProvider = string | (() => string | Promise<string>);
  * @example
  * ```ts
  * import { createConnectTransport } from "@connectrpc/connect-web";
- * import { createAuthInterceptor } from "chatto.js";
+ * import { createAuthInterceptor } from "chatto-js";
  *
  * const transport = createConnectTransport({
  *   baseUrl: "https://chat.example.com/api/connect",

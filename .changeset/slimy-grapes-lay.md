@@ -1,5 +1,5 @@
 ---
-"chatto.js": minor
+"chatto-js": minor
 ---
 
 initial implementation
