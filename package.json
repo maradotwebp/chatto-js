@@ -1,6 +1,6 @@
 {
   "name": "chatto.js",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "TypeScript client for the Chatto chat server",
   "type": "module",
   "main": "./dist/index.js",
