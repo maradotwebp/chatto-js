@@ -1,5 +1,10 @@
 name: Release
 
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
 on:
   push:
     branches:
@@ -24,6 +29,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 26
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Install Dependencies
         run: bun install --frozen-lockfile
@@ -33,5 +40,3 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: bun run release
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
